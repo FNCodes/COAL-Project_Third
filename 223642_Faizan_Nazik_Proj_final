@@ -1,0 +1,195 @@
+.data
+title: .asciiz "\n                     A Word Multiplier And Divider in MIPS Assembly Language.\n"
+
+num1: .asciiz "  Please Enter the First number:  "
+num2: .asciiz "  Please Enter the Second number: "
+num3: .asciiz "  Please Enter the Divisor:  "
+
+err_msg: .asciiz "\n Error: Division by zero or invalid input!  "
+
+mul_rslt: .asciiz "\n  Result of Multiplication (Int):  "
+div_rslt: .asciiz "\n  Result of Division (Int):  "
+
+mul_rslt_float: .asciiz "\n  Result of Multiplication (Float):  "
+div_rslt_float: .asciiz "\n  Result of Division (Float):  "
+
+choice: .asciiz "\n  Do you want to perform:\n1.   Integer Calculations\n2.   Floating-Point Calculations\n   Enter your choice:"
+cnt_ext: .asciiz "\n  Do You want to Continue ? (Press 1 for Continue , Press 0 for Exit .) "
+
+result_mul: .word 0
+result_div: .word 0
+
+result_mul_float: .float 0.0
+result_div_float: .float 0.0
+
+input1: .word 0        
+input2: .word 0        
+input3: .word 0 
+
+input4: .float 0.0
+input5: .float 0.0
+input6: .float 0.0
+
+input_choice: .word 0
+
+.text
+.globl main
+main:
+    li $v0, 4
+    la $a0, title
+    syscall
+calculation:
+    # Choice for Integer or Floating-Point Calculations
+    li $v0, 4
+    la $a0, choice
+    syscall
+
+    li $v0, 5
+    syscall
+    sw $v0, input_choice  # Store user's choice
+
+    # Load user's choice into $t0
+    lw $t0, input_choice
+    # Branch based on the user's choice
+    beq $t0, 1, integer_calculation
+    beq $t0, 2, floating_point_operations
+    j main  
+
+integer_calculation:
+
+    li $v0, 4            
+    la $a0, num1         
+    syscall
+
+    li $v0, 5            
+    syscall
+    sw $v0, input1       
+
+    li $v0, 4            
+    la $a0, num2         
+    syscall
+
+    li $v0, 5            
+    syscall
+    sw $v0, input2       
+
+    li $v0, 4            
+    la $a0, num3         
+    syscall
+
+    li $v0, 5            
+    syscall
+    sw $v0, input3       
+
+    # Load user inputs into registers for calculations
+    lw $t0, input1       # Load nput into $t0
+    lw $t1, input2       # Load  input into $t1
+    lw $t2, input3       # Load div input into $t2
+
+    # Multiplication
+    mult $t0, $t1        # Multiply first and second inputs
+    mflo $t3             # Get the low 32 bits of the result
+    sw $t3, result_mul   # Store the result of multiplication
+    
+
+    # Division
+    beq $t2, $zero, division_error  # Check if divisor is zero
+    div $t0, $t2         # Divide first input by divisor
+    mflo $t4             # Get the quotient
+    sw $t4, result_div   # Store the result of division
+    j display_results
+
+
+floating_point_operations:
+    li $v0, 4
+    la $a0, num1
+    syscall
+
+    li $v0, 6
+    syscall
+    mov.s $f0, $f0
+    s.s $f0, input4
+
+    li $v0, 4
+    la $a0, num2
+    syscall
+
+    li $v0, 6
+    syscall
+    mov.s $f1, $f0
+    s.s $f1, input5
+
+    li $v0, 4
+    la $a0, num3
+    syscall
+
+    li $v0, 6
+    syscall
+    mov.s $f2, $f0
+    s.s $f2, input6
+
+    # Floating-Point Multiplication
+    l.s $f10, input4
+    l.s $f11, input5
+    mul.s $f12, $f10, $f11
+    s.s $f12, result_mul_float
+
+    # Floating-Point Division
+    l.s $f13, input4
+    l.s $f14, input6
+    div.s $f15, $f13, $f14
+    s.s $f15, result_div_float
+    j display_results
+    
+division_error:
+
+    li $v0, 4            
+    la $a0, err_msg
+    syscall
+    j calculation 
+    
+display_results:
+    li $v0, 4
+    la $a0, mul_rslt
+    syscall
+    
+    li $v0, 1            # syscall code for printing integer
+    lw $a0, result_mul   # Load result of multiplication into $a0
+    syscall
+
+    li $v0, 4
+    la $a0, div_rslt
+    syscall
+  
+    li $v0, 1            # syscall code for printing integer
+    lw $a0, result_div   # Load result of division into $a0
+    syscall
+
+    # Display results for Floating 
+    li $v0, 4
+    la $a0, mul_rslt_float
+    syscall
+
+    li $v0, 2
+    l.s $f12, result_mul_float
+    syscall
+
+    li $v0, 4
+    la $a0, div_rslt_float
+    syscall
+
+    li $v0, 2
+    l.s $f12, result_div_float
+    syscall
+
+    # Choice for Continue or Exit
+    li $v0, 4
+    la $a0, cnt_ext
+    syscall
+    li $v0, 5
+    syscall
+    beq $v0, 1, calculation
+    
+    # Exit
+    li $v0, 10
+    syscall
